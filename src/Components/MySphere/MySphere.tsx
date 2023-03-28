@@ -8,27 +8,24 @@ interface Props {
 }
 
 const RADIUS = 0.25;
-const GRAVITY = 0.08;
+const GRAVITY = new THREE.Vector3(0, -0.0006, 0);
+const VELOCITY = new THREE.Vector3(0.08, 0.05, 0);
+const GROUND = -3;
+const WALL = 3;
 
 export const MySphere: React.FC<Props> = ({ startPosition }) => {
   const ref = useRef<Mesh>(null!);
-  const velocity = useRef(new THREE.Vector3(0.01, 0.05, 0));
 
-  useFrame(({ clock }) => {
-    ////////////////////// old implementation
-    const bounds = 3;
-    const delta = clock.elapsedTime;
-    const circle = ref.current;
+  useFrame(() => {
+    const position = ref.current.position;
+    position.add(VELOCITY);
+    VELOCITY.add(GRAVITY);
 
-    circle.position.y -= GRAVITY * delta;
-    circle.position.y += velocity.current.y;
-    circle.position.x += velocity.current.x;
-
-    if (circle.position.x < -bounds || circle.position.x > bounds) {
-      velocity.current.x = -velocity.current.x;
+    if (position.y - RADIUS < GROUND) {
+      VELOCITY.setY(Math.abs(-VELOCITY.y) * 0.9);
     }
-    if (circle.position.y < -bounds || circle.position.y > bounds) {
-      velocity.current.y = -velocity.current.y;
+    if (position.x - RADIUS > WALL || position.x - RADIUS < -WALL) {
+      VELOCITY.setX(-VELOCITY.x);
     }
   });
 
