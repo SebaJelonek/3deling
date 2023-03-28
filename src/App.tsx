@@ -1,6 +1,9 @@
 import { Canvas } from '@react-three/fiber';
-import './App.css';
+import { Physics } from '@react-three/p2';
+import { MyBox } from './Components/MyBox/MyBox';
 import { MySphere } from './Components/MySphere/MySphere';
+import { MyPlane } from './Components/MyRing/MyRing';
+import './App.css';
 
 function App() {
   return (
@@ -8,20 +11,12 @@ function App() {
       <div className='canvas-container'>
         <Canvas className='canvas'>
           <ambientLight intensity={0.1} />
-          <directionalLight color='#F70096' position={[0, 1, 5]} />
-          <mesh position={1.25}>
-            <sphereGeometry args={[0.15, 32, 16]} />
-            <meshStandardMaterial color='#FFAD00' />
-          </mesh>
-          <mesh position={-1.25}>
-            <sphereGeometry args={[0.5, 32, 16]} />
+          <directionalLight color='#333' position={[0, 1, 5]} />
+          <mesh position={[0, 0, 0]}>
+            <ringGeometry args={[3.73, 3.8, 128, 16]} />
             <meshNormalMaterial />
           </mesh>
-          <mesh position={-0}>
-            <sphereGeometry args={[0.5, 32, 16]} />
-            <meshBasicMaterial color='#92FC00' />
-          </mesh>
-          <MySphere />
+          <MySphere startPosition={[0, 0, 0]} />
         </Canvas>
       </div>
     </div>
