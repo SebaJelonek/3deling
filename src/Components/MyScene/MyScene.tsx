@@ -5,17 +5,25 @@ import { MyRing } from '../MyRing/MyRing';
 
 export const MyScene: React.FC = () => {
   const [spheres, setSpheres] = useState<[[number, number, number]]>([
-    [Math.random(), Math.random(), 0],
+    [0, 0, 0],
   ]);
+
   useEffect(() => {
-    let newSpheres: [[number, number, number]] = [...spheres];
-    for (let index = 0; index < 19; index++) {
-      const position: [number, number, number] = [
-        Math.random(),
-        Math.random(),
+    const newSpheres: [[number, number, number]] = [...spheres];
+    newSpheres.pop();
+    for (let index = 0; index < 10; index++) {
+      const velocity1: [number, number, number] = [
+        Math.random() / 100,
+        Math.random() / 100,
         0,
       ];
-      newSpheres.push(position);
+      const velocity2: [number, number, number] = [
+        (Math.random() * -1) / 100,
+        Math.random() / 100,
+        0,
+      ];
+      newSpheres.push(velocity1);
+      newSpheres.push(velocity2);
     }
     setSpheres(newSpheres);
   }, []);
@@ -26,7 +34,7 @@ export const MyScene: React.FC = () => {
       <directionalLight color='#333' position={[0, 1, 5]} />
       <MyRing />
       {spheres.map((sphere: [number, number, number], i: number) => (
-        <MySphere startPosition={sphere} key={i} />
+        <MySphere velocity={sphere} key={i} />
       ))}
     </Canvas>
   );
