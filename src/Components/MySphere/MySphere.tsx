@@ -2,60 +2,79 @@ import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Mesh } from 'three';
+import { collisionWithRing } from '../../Utils/CollisionWithRing/CollisionWithRing';
 
 interface Props {
-  velocity: [number, number, number];
+  velocity: THREE.Vector3;
+  circlesArray: {
+    position: THREE.Vector3;
+    velocity: THREE.Vector3;
+  }[];
+  radius: number;
+  ringRadius: number;
+  index: number;
 }
 
-const RADIUS = 0.25;
 const GRAVITY = new THREE.Vector3(0, -0.00006, 0);
-const VELOCITY = new THREE.Vector3(
-  0.0000000000000000000008,
-  0.0000000000000000000005,
-  0
-);
-const GROUND = -3;
-const WALL = 3;
-const boundsRadius = 3.73;
 
-export const MySphere: React.FC<Props> = ({ velocity }) => {
+export const MySphere: React.FC<Props> = ({
+  velocity,
+  circlesArray,
+  radius,
+  ringRadius,
+  index,
+}) => {
   const ref = useRef<Mesh>(null!);
-  const realVelocity = new THREE.Vector3(...velocity);
 
   useFrame(() => {
     const position = ref.current.position;
-    position.add(realVelocity);
-    realVelocity.add(GRAVITY);
 
-    const distanceFromOrigin = Math.sqrt(position.x ** 2 + position.y ** 2);
+    circlesArray.forEach((_, i) => {
+      for (let j = i; j < circlesArray.length; j++) {
+        const otherCircle = circlesArray[j];
+        const distance = position.distanceTo(otherCircle.position);
+        if (distance <= radius + radius) {
+          // Calculate collision normal and relative velocity
+          const collisionNormal = position
+            .clone()
+            .sub(otherCircle.position)
+            .normalize();
+          const relativeVelocity = velocity.clone().sub(otherCircle.velocity);
 
-    if (distanceFromOrigin > boundsRadius) {
-      // Calculate the normal vector of the sphere's position on the surface of the bounds
-      const normal = {
-        x: position.x / distanceFromOrigin,
-        y: position.y / distanceFromOrigin,
-      };
+          // Calculate speed along collision normal
+          const speedAlongNormal = relativeVelocity.dot(collisionNormal);
 
-      // Reflect the velocity vector across the normal
-      const dotProduct = realVelocity.x * normal.x + realVelocity.y * normal.y;
+          // Check if circles are moving towards each other
+          if (speedAlongNormal > 0) {
+            return;
+          }
+          const mass = radius ** 2;
 
-      realVelocity.setX(-1 * dotProduct * normal.x);
-      realVelocity.setY(-1 * dotProduct * normal.y);
-    }
+          // Calculate impulse magnitude
+          const impulseMagnitude =
+            (-1.95 * speedAlongNormal) / (1 / mass + 1 / mass);
 
-    // old
-    // if (position.y - RADIUS < GROUND) {
-    //   VELOCITY.setY(Math.abs(-VELOCITY.y) * 0.9);
-    // }
+          // Calculate impulse and update velocities
+          const impulse = collisionNormal
+            .clone()
+            .multiplyScalar(impulseMagnitude);
+          velocity.add(impulse.clone().divideScalar(mass));
+          otherCircle.velocity.sub(impulse.clone().divideScalar(mass));
 
-    // if (position.x - RADIUS > WALL || position.x - RADIUS < -WALL) {
-    //   VELOCITY.setX(-VELOCITY.x);
-    // }
+          // Update positions
+          position.add(velocity);
+          otherCircle.position.add(otherCircle.velocity);
+        }
+      }
+      velocity.add(GRAVITY);
+    });
+
+    collisionWithRing(radius, ringRadius, position, velocity);
   });
 
   return (
     <mesh ref={ref} position={[0, 0, 0]}>
-      <circleBufferGeometry args={[RADIUS, 32, 16]} />
+      <circleBufferGeometry args={[radius, 32, 16]} />
       <meshNormalMaterial />
     </mesh>
   );
