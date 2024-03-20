@@ -1,5 +1,9 @@
 import { MyScene } from './Components/MyScene/MyScene';
 import './App.css';
+import 'dotenv/config';
+
+console.log(process.env.REACT_APP_API_KEY)
+console.log('change');
 
 function App() {
   return (
